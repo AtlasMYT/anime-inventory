@@ -1,138 +1,156 @@
-# 🎌 Anime Inventory
+# 🎌 anime-inventory
 
-A self-hosted anime collection inventory for Proxmox LXC setups or standalone servers.  
-It scans your mounted HDD folders, catalogs them into an SQLite database, and serves a simple web interface to browse and prevent duplicate downloads.
+A self-hosted inventory system for your anime collection, designed for Proxmox setups with HDD bind mounts.  
+Scans and catalogs files into an SQLite database and provides a browsable web UI to prevent duplicate downloads.
 
 ---
 
 ## 📦 Features
-- 🗂 Scans mounted anime HDDs automatically or on demand
-- 📦 Stores results in SQLite (`anime.db`)
-- 🌐 Flask-based API with HTML frontend
-- 📂 Collapsible tree-view UI of your collection
-- 🔍 Search support (via Web UI)
-- 📑 Export listing as CSV
-- ⚡ One-command setup
-- 🔄 Web-based **Rescan** (no CLI needed!)
+
+- 🗂️ Scans mounted anime HDDs
+- 🧠 Stores metadata in SQLite (`anime.db`)
+- 🌐 Simple Flask-based API
+- 🧭 Collapsible tree-view web UI
+- ⚡ One-command setup with automatic **systemd** startup
 
 ---
 
-## 🚀 Quick Install
-Requires:
-- Ubuntu-based LXC or VM
-- HDD bind-mounted to your container (e.g., `/mnt/anime-hdd`)
+## 🚀 Quick Start (with systemd auto-start)
 
-Run:
+> ✅ **Requirements:**  
+> - Fresh Ubuntu or Debian LXC/VM  
+> - `curl` or `wget` installed  
+> - HDD bind-mounted at your target location (`/mnt/anime-hdd` by default)
+
+Run this in your container:
+
 ```bash
 bash <(curl -s https://raw.githubusercontent.com/AtlasMYT/anime-inventory/main/setup.sh)
 
-Access at:
+After installation, the app will be running automatically as a **systemd service**.
 
-http://<your-LXC-IP>:5000
+Visit:
+
+
+http://<your-container-ip>:5000
 
 ---
 
-## 🛠 Configuration
-The `config.json` file:
+## 🛠️ Configuration
+
+Edit **`config.json`** in the repository directory (`/root/anime-inventory/config.json`):
+
 json
 {
   "ANIME_DIR": "/mnt/anime-hdd",
   "DB_PATH": "anime.db",
   "PORT": 5000
 }
-- **ANIME_DIR** → Path to your mounted anime HDD
-- **DB_PATH** → Path to SQLite database file
-- **PORT** → HTTP port for Flask server
+
+- **ANIME_DIR** – Path to your mounted HDD containing anime files  
+- **DB_PATH** – Path to SQLite database (default: `anime.db` in repo)  
+- **PORT** – Port number for the Flask server  
+
+After changing the port or directory, restart the service:
+
+bash
+systemctl restart anime-inventory
 
 ---
 
-## 🔄 Updating Your Inventory
-You can **rescan from the Web UI** after adding new anime, or from CLI:
+## 🖥️ Service Management
+
+The setup script installs a **systemd service** so your app runs on boot.
+
+**Start**
 bash
+systemctl start anime-inventory
+
+**Stop**
+bash
+systemctl stop anime-inventory
+
+**Restart**
+bash
+systemctl restart anime-inventory
+
+**Check Status**
+bash
+systemctl status anime-inventory
+
+**View Logs**
+bash
+journalctl -u anime-inventory -f
+
+---
+
+## 🔄 Rescanning for New Files
+
+If you add new anime or change the folder structure, you can rescan without restarting:
+
+bash
+cd /root/anime-inventory
 source venv/bin/activate
 python3 scanner.py
 
 ---
 
-## 🔁 Updating the Repo (Without Deleting)
-In your anime-inventory folder:
+## 🧰 Troubleshooting
+
+**Port Already in Use**  
+This should no longer happen since systemd now manages the process, but if it does:
+
 bash
-git pull
-source venv/bin/activate
-pip install -r requirements.txt
-This **pulls new changes** without removing your config, database, or downloaded files.
+lsof -ti:5000 | xargs kill -9
+systemctl restart anime-inventory
 
----
-
-## 🔌 Auto-Start on Boot
-To make anime-inventory start automatically on LXC boot:
+**Logs Not Showing in Browser**  
+Check service logs:
 bash
-nano /etc/systemd/system/anime-inventory.service
-Paste:
-ini
-[Unit]
-Description=Anime Inventory Flask App
-After=network.target
-
-[Service]
-Type=simple
-WorkingDirectory=/root/anime-inventory
-ExecStart=/root/anime-inventory/venv/bin/python3 /root/anime-inventory/app.py
-Restart=always
-User=root
-
-[Install]
-WantedBy=multi-user.target
-Then:
-bash
-systemctl daemon-reload
-systemctl enable anime-inventory
-systemctl start anime-inventory
+journalctl -u anime-inventory -f
 
 ---
 
 ## 📁 Project Structure
 
+
 anime-inventory/
-├── app.py              # Flask backend
-├── scanner.py          # Anime folder scanner
-├── config.json         # Configuration file
+├── app.py              # Flask app for API and UI
+├── scanner.py          # File scanner + DB updater
+├── config.json         # User-defined settings
 ├── requirements.txt    # Python dependencies
-├── setup.sh            # Automated installer
-├── static/             # HTML, CSS, JS
-└── anime.db            # SQLite database
+├── setup.sh            # One-shot installer script with systemd integration
+├── static/             # Frontend HTML/CSS/JS
+└── anime-inventory.service (installed in /etc/systemd/system)
+
+---
+
+## 🧩 Roadmap
+
+- 🔍 Search bar in the frontend
+- 📝 Tags & notes per file
+- 🧾 Export as CSV
+- 🔐 Auth for remote access
 
 ---
 
 ## 🧼 License
-MIT
+
+MIT License – Free to use, modify, and distribute.
 
 
 ---
 
-## **3️⃣ .gitignore**
-Here’s a sensible `.gitignore` for your project:
+### ✅ Changes from Original README
+- **Removed nohup instructions** → replaced with **systemd-based autostart**
+- Added `systemctl` commands  
+- Added troubleshooting commands for port issues  
+- Clarified config file editing  
+- Updated project structure to mention systemd service  
 
-```gitignore
-# Python
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.db
+---
 
-# Virtual environment
-venv/
-env/
+If you want, I can also **add a section for custom port configuration directly from `setup.sh` as an argument**, so in README it can say:  
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-nohup.out
-
-# Config and local data
-config.json
-anime.db
+```bash
+bash setup.sh --port 5050
