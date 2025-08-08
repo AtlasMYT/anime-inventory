@@ -136,4 +136,4 @@ anime-inventory/
 
 ## 🧼 License
 
-MIT License – Free to use, modify, and distribute.
+GNU GENERAL PUBLIC LICENSE Version 3
