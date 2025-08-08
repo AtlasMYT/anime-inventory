@@ -1,44 +1,45 @@
-#!/usr/bin/env python3
 import os
 import sqlite3
+import time
+import json
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'anime.db')
-ROOT_DIR = '/anime-data'
+# Load config
+with open("config.json") as f:
+    CONFIG = json.load(f)
+
+ANIME_DIR = CONFIG["ANIME_DIR"]
+DB_PATH = CONFIG["DB_PATH"]
 
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''
-      CREATE TABLE IF NOT EXISTS anime_files (
-        id INTEGER PRIMARY KEY,
-        path TEXT UNIQUE,
-        size INTEGER,
-        mtime REAL
-      )
+        CREATE TABLE IF NOT EXISTS anime_files (
+            id INTEGER PRIMARY KEY,
+            path TEXT UNIQUE,
+            size INTEGER,
+            mtime REAL
+        )
     ''')
     conn.commit()
     return conn
 
-def scan(conn):
+def scan_and_update(conn):
     c = conn.cursor()
-    for dirpath, _, files in os.walk(ROOT_DIR):
-        for fn in files:
-            full = os.path.join(dirpath, fn)
+    for root, dirs, files in os.walk(ANIME_DIR):
+        for file in files:
+            full_path = os.path.join(root, file)
             try:
-                st = os.stat(full)
+                stat = os.stat(full_path)
+                c.execute('''
+                    INSERT OR REPLACE INTO anime_files (path, size, mtime)
+                    VALUES (?, ?, ?)
+                ''', (full_path, stat.st_size, stat.st_mtime))
             except FileNotFoundError:
                 continue
-            c.execute('''
-              INSERT INTO anime_files(path, size, mtime)
-              VALUES (?, ?, ?)
-              ON CONFLICT(path) DO UPDATE SET
-                size=excluded.size,
-                mtime=excluded.mtime
-            ''', (full, st.st_size, st.st_mtime))
     conn.commit()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     conn = init_db()
-    scan(conn)
-    conn.close()
+    scan_and_update(conn)
     print("Scan complete.")
