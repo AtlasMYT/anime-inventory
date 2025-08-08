@@ -137,20 +137,3 @@ anime-inventory/
 ## 🧼 License
 
 MIT License – Free to use, modify, and distribute.
-
-
----
-
-### ✅ Changes from Original README
-- **Removed nohup instructions** → replaced with **systemd-based autostart**
-- Added `systemctl` commands  
-- Added troubleshooting commands for port issues  
-- Clarified config file editing  
-- Updated project structure to mention systemd service  
-
----
-
-If you want, I can also **add a section for custom port configuration directly from `setup.sh` as an argument**, so in README it can say:  
-
-```bash
-bash setup.sh --port 5050
