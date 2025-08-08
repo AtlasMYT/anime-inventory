@@ -1,36 +1,43 @@
 from flask import Flask, jsonify, send_from_directory
-import sqlite3
 import os
+import json
 
-DB_PATH = os.path.join(os.path.dirname(__file__), 'anime.db')
-ROOT_DIR = '/anime-data'
+# Load config
+with open("config.json") as f:
+    CONFIG = json.load(f)
 
-app = Flask(__name__, static_folder='static')
+ANIME_DIR = CONFIG["ANIME_DIR"]
+DB_PATH = CONFIG["DB_PATH"]
+PORT = CONFIG.get("PORT", 5000)
 
-def get_tree():
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
-    cur.execute("SELECT path FROM anime_files ORDER BY path")
-    tree = {}
-    for (fullpath,) in cur:
-        rel = os.path.relpath(fullpath, ROOT_DIR)
-        parts = rel.split(os.sep)
-        node = tree
-        for p in parts:
-            node = node.setdefault(p, {})
-    conn.close()
+app = Flask(__name__)
+
+def get_tree(path):
+    tree = {"name": os.path.basename(path), "path": path, "children": []}
+    try:
+        for entry in os.scandir(path):
+            if entry.is_dir(follow_symlinks=False):
+                tree["children"].append(get_tree(entry.path))
+            else:
+                tree["children"].append({
+                    "name": entry.name,
+                    "path": entry.path
+                })
+    except PermissionError:
+        pass
     return tree
 
-@app.route('/api/tree')
+@app.route("/api/tree")
 def api_tree():
-    return jsonify(get_tree())
+    return jsonify(get_tree(ANIME_DIR))
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def static_proxy(path):
-    if path and os.path.exists(os.path.join(app.static_folder, path)):
-        return send_from_directory(app.static_folder, path)
-    return send_from_directory(app.static_folder, 'index.html')
+@app.route("/")
+def index():
+    return send_from_directory("static", "index.html")
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+@app.route("/<path:filename>")
+def static_files(filename):
+    return send_from_directory("static", filename)
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=PORT)
