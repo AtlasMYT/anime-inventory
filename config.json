@@ -1,0 +1,5 @@
+{
+  "ANIME_DIR": "/mnt/anime-hdd",
+  "DB_PATH": "anime.db",
+  "PORT": 5000
+}
