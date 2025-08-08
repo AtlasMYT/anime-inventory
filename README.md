@@ -1,75 +1,84 @@
-{“name”:“anime_inventory_readme”,“type”:“canvas”,“content”:"# Anime Inventory
+# 🎌 anime-inventory
 
-Description
+A self-hosted inventory system for your anime collection, designed for Proxmox setups with HDD bind mounts. Scans and catalogs files into an SQLite database and provides a browsable web UI to prevent duplicate downloads.
 
-A Python + Flask app to scan your anime HDD collection and browse it via a web-based tree view.
-Requirements
+---
 
-    Python 3.8+
-    pip
-    Bind-mounted HDD in /anime-data
+## 📦 Features
 
-Installation
+- 🗂️ Scans mounted anime HDDs
+- 🧠 Stores metadata in SQLite (`anime.db`)
+- 🌐 Simple Flask-based API
+- 🧭 Collapsible tree-view web UI
+- ⚡ One-command setup with `setup.sh`
 
-        
+---
 
-bash
+## 🚀 Quick Start
 
-apt update && apt install -y python3 python3-pip
-pip3 install -r requirements.txt
+> ✅ Requirements: a clean Ubuntu-based LXC with `curl` or `wget` installed, and the HDD bind-mounted at your target location.
 
-Usage
+Run this in your LXC container:
 
-    Scan your HDD
+```bash
+bash <(curl -s https://raw.githubusercontent.com/yourusername/anime-inventory/main/setup.sh)
 
-        
-
-bash
-
-python3 scanner.py
-
-    Start the web server
+After installation, visit:
 
         
 
-bash
+text
 
-python3 app.py
+http://<your-container-ip>:5000
 
-    Open browser
+🛠️ Configuration
 
-Visit: http://<CT-IP>:5000
-Project Structure
+Modify config.json to customize:
+
+        
+
+json
+
+{
+  "ANIME_DIR": "/mnt/anime-hdd",
+  "DB_PATH": "anime.db",
+  "PORT": 5000
+}
+
+    ANIME_DIR: Path to your mounted anime HDD.
+    DB_PATH: SQLite database location (default: anime.db).
+    PORT: Port for the Flask web server.
+
+📁 Project Structure
 
         
 
 text
 anime-inventory/
-│
-├── scanner.py           # Crawls directories, updates SQLite DB
-├── app.py               # Flask server for API + HTML UI
-├── requirements.txt     # Python dependencies
-├── README.md             # Project instructions
-├── .gitignore           # Ignore DB + env
-│
-├── static/              # Frontend files
-│   ├── index.html
-│   ├── style.css
-│   └── tree.js
-│
-└── anime.db             # SQLite DB (empty at start)
+├── app.py              # Flask app for API and UI
+├── scanner.py          # File scanner + DB updater
+├── config.json         # User-defined settings
+├── requirements.txt    # Python dependencies
+├── setup.sh            # One-shot installer script
+├── static/             # Frontend HTML/CSS/JS
+└── .gitignore
 
-Notes
+🔄 Rescanning
 
-    Set up a cron job or use watchdog to auto-scan.
-    The database anime.db is local to the app and not committed to GitHub.
-
-Optional: Quick Installer
+If you add new anime files or update folders:
 
         
 
-bashcurl -s https://raw.githubusercontent.com/<user>/anime-inventory/main/install.sh | bash
-```"}
-Here’s the GitHub‑ready `README.md` in proper Markdown formatting — you can copy‑paste this straight into your repository.  
+bash
 
-Do you want me to also **add some screenshots** of the HTML tree view so the repo looks nicer on GitHub?
+source venv/bin/activate
+python3 scanner.py
+
+🧩 Future Ideas
+
+    🔍 Search bar in the frontend
+    📝 Tags & notes per file
+    🧾 Export as CSV
+    🔐 Auth for remote access
+
+🧼 License
