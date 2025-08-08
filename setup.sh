@@ -6,7 +6,7 @@ echo "📦 Updating packages and installing dependencies..."
 apt update && apt install -y python3 python3-pip python3-venv curl git
 
 echo "📁 Cloning anime-inventory repo..."
-git clone https://github.com/yourusername/anime-inventory.git
+git clone https://github.com/AtlasMYT/anime-inventory.git
 cd anime-inventory
 
 echo "🐍 Setting up virtual environment..."
