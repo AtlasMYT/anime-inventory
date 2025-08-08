@@ -1,14 +1,26 @@
 #!/bin/bash
 set -e
 
-echo "📦 Installing dependencies..."
-apt update && apt install -y python3 python3-pip python3-venv git curl
+echo "📦 Installing system dependencies..."
+if [ -x "$(command -v apt)" ]; then
+    sudo apt update
+    sudo apt install -y python3 python3-pip python3-venv git curl
+elif [ -x "$(command -v yum)" ]; then
+    sudo yum install -y python3 python3-pip python3-venv git curl
+else
+    echo "❌ Unsupported package manager. Install Python 3 manually."
+    exit 1
+fi
 
-echo "📁 Cloning anime-inventory repo..."
-git clone https://github.com/AtlasMYT/anime-inventory.git
-cd anime-inventory
+echo "🐍 Setting up Python virtual environment..."
+python3 -m venv venv
+source venv/bin/activate
 
-echo "🛠️ Writing config.json..."
+echo "📜 Installing Python packages..."
+pip install --upgrade pip
+pip install -r requirements.txt
+
+if [ ! -f config.json ]; then
 cat > config.json <<EOF
 {
   "ANIME_DIR": "/mnt/anime-hdd",
@@ -16,19 +28,13 @@ cat > config.json <<EOF
   "PORT": 5000
 }
 EOF
+echo "📝 Created default config.json"
+fi
 
-echo "🐍 Setting up virtual environment..."
-python3 -m venv venv
-source venv/bin/activate
+echo "🔍 Running initial scan..."
+python3 scanner.py || echo "⚠ Initial scan skipped (HDD not present)."
 
-echo "📚 Installing Python packages..."
-pip install --upgrade pip
-pip install -r requirements.txt
+echo "🚀 Launching server..."
+nohup python3 app.py > server.log 2>&1 &
 
-echo "🧠 Running scanner to populate the database..."
-python3 scanner.py
-
-echo "🚀 Launching Flask app..."
-nohup python3 app.py &
-
-echo "✅ Setup complete. Visit your CT IP on port 5000 (e.g., http://192.168.x.x:5000)"
+echo "✅ Installation complete. Visit http://localhost:5000"
