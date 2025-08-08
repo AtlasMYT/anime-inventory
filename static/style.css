@@ -1,0 +1,10 @@
+body {
+  font-family: sans-serif;
+  margin: 1em;
+}
+ul.tree { list-style: none; padding-left: 1em; }
+ul.tree ul { margin-left: 1em; border-left: 1px dashed #ccc; }
+li.folder::before { content: "📁 "; }
+li.file::before { content: "📄 "; }
+li { cursor: pointer; }
+li.collapsed > ul { display: none; }
