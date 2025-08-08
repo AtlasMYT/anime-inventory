@@ -21,7 +21,7 @@ A self-hosted inventory system for your anime collection, designed for Proxmox s
 Run this in your LXC container:
 
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/yourusername/anime-inventory/main/setup.sh)
+bash <(curl -s https://raw.githubusercontent.com/AtlasMYT/anime-inventory/main/setup.sh)
 
 After installation, visit:
 
