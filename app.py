@@ -28,18 +28,28 @@ def get_tree_from_db():
     rows = cursor.fetchall()
     conn.close()
 
-    tree = {"name": os.path.basename(ANIME_DIR), "children": {}}
+    # Root node
+    tree = {
+        "name": os.path.basename(ANIME_DIR.rstrip(os.sep)),
+        "type": "folder",
+        "children": {}
+    }
+
     for path, name in rows:
-        # Handle case if ANIME_DIR not present
         try:
             rel_path = os.path.relpath(path, ANIME_DIR)
         except ValueError:
             rel_path = path
         parts = rel_path.split(os.sep)
         node = tree
-        for part in parts[:-1]:
-            node = node["children"].setdefault(part, {"children": {}})
-        node["children"][parts[-1]] = {}
+        for i, part in enumerate(parts):
+            is_last = (i == len(parts) - 1)
+            if part not in node["children"]:
+                node["children"][part] = {
+                    "type": "file" if is_last else "folder",
+                    "children": {} if not is_last else None
+                }
+            node = node["children"][part]
     return tree
 
 @app.route("/api/tree")
