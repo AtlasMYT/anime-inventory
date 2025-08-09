@@ -4,33 +4,63 @@
     <meta charset="UTF-8">
     <title>🎌 Anime Inventory</title>
     <link rel="stylesheet" href="style.css">
+    <script src="tree.js" defer></script>
 </head>
 <body>
     <h1>🎌 Anime Inventory</h1>
 
-    <button id="showTree">Show Tree</button>
-    <button onclick="window.location='/api/export_csv'">Export CSV</button>
-    <button id="rescanBtn">Rescan</button>
+    <!-- Search bar -->
+    <input type="text" id="search-box" placeholder="Search anime..." />
+    <button id="search-btn">Search</button>
 
-    <div id="treeContainer"></div>
+    <!-- Control buttons -->
+    <button id="show-tree-btn">Show Tree</button>
+    <button id="export-btn">Export CSV</button>
+    <button id="rescan-btn">Rescan</button>
 
-    <script src="tree.js"></script>
+    <div id="results"></div>
+
     <script>
-    document.getElementById('showTree').addEventListener('click', () => {
-        fetch('/api/tree')
-            .then(res => res.json())
-            .then(data => {
-                const container = document.getElementById('treeContainer');
-                container.innerHTML = "";
-                renderTree(data, container);
-            });
-    });
+        document.getElementById('show-tree-btn').addEventListener('click', () => {
+            fetch('/api/tree')
+                .then(r => r.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = "";
+                    renderTree(data, resultsDiv);
+                });
+        });
 
-    document.getElementById('rescanBtn').addEventListener('click', () => {
-        fetch('/api/rescan', { method: "POST" })
-            .then(res => res.json())
-            .then(data => alert(data.status));
-    });
+        document.getElementById('export-btn').addEventListener('click', () => {
+            window.location.href = '/api/export_csv';
+        });
+
+        document.getElementById('rescan-btn').addEventListener('click', () => {
+            fetch('/api/rescan', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => alert(data.status));
+        });
+
+        document.getElementById('search-btn').addEventListener('click', () => {
+            const query = document.getElementById('search-box').value.trim();
+            if (!query) return;
+
+            fetch(`/api/search?q=${encodeURIComponent(query)}`)
+                .then(r => r.json())
+                .then(data => {
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = "";
+                    if (data.length === 0) {
+                        resultsDiv.innerHTML = "<p>No results found.</p>";
+                        return;
+                    }
+                    data.forEach(item => {
+                        const p = document.createElement('p');
+                        p.textContent = `${item.name} — ${item.path}`;
+                        resultsDiv.appendChild(p);
+                    });
+                });
+        });
     </script>
 </body>
 </html>
